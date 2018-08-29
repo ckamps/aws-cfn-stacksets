@@ -1,2 +1,5 @@
-# aws-cfn-stacksets
-Examples of using CloudFormation Stack Sets
+# Examples of using CloudFormation Stack Sets
+
+## `custom-resource`
+
+Example of using custom CloudFormation resource to manage CloudFormation stack sets.

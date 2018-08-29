@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Manages set of IAM roles and policies via CloudFormation stack sets. This stack depends on deployment of the a custom CloudFormation resource to support management of stack sets.
+
+Parameters:
+  pBucket:
+    Type: String
+    Description: Name of existing S3 bucket where the CloudFormation templates reside 
+  
+  pStackSetAdministrationRoleARN:
+    Type: String
+    Description: Stack set administration IAM role 
+    Default: arn:aws:iam::123456789012:role/CloudPlatform-SVC-StackSetAdmin
+
+  pStackSetExecutionRoleName:
+    Type: String
+    Description: Stack set exection IAM role name
+    Default: CloudPlatform-XACC-StackSetExecution
+
+  pMasterAccountId:
+    Type: String
+
+  pLoggingAccountId:
+    Type: String
+
+  pSecurityAccountId:
+    Type: String
+    
+  pSharedServicesAccountId:
+    Type: String
+
+  pTransitAccountId:
+    Type: String
+
+  pSandboxAccountId:
+    Type: String
+
+  pNonProdAccountId:
+    Type: String
+
+  pProdAccountId:
+    Type: String
+
+Resources:
+  rIAMPoliciesNetworkAdmin:
+    Type: Custom::StackSet
+    Properties:
+      ServiceToken: 
+        Fn::ImportValue: StackSetCustomResource
+      StackSetName: CloudPlatform-IAM-Policies-NetworkAdmin
+      StackSetDescription: 'IAM Policies: Network Administrator Permissions'
+      TemplateURL: !Sub https://s3.amazonaws.com/${pBucket}/cfn-templates/CloudPlatform-IAM-Policies-NetworkAdmin.yml
+      Tags:
+        - Version: 1
+      Capabilities: 
+        - CAPABILITY_NAMED_IAM
+      AdministrationRoleARN: !Ref pStackSetAdministrationRoleARN
+      ExecutionRoleName: !Ref pStackSetExecutionRoleARN
+      OperationPreferences: {
+        "FailureToleranceCount": 0,
+        "MaxConcurrentCount": 10
+      }
+      StackInstances:
+        - Regions:
+            - us-east-1
+          Accounts:
+            - !Ref pMasterAccountId
+            - !Ref pLoggingAccountId
+            - !Ref pSecurityAccountId
+            - !Ref pSharedServicesAccountId
+            - !Ref pTransitAccountId
+            - !Ref pSandboxAccountId
+            - !Ref pNonProdAccountId
+            - !Ref pProdAccountId
+
+  rIAMRolesSAMLBaseline:
+    Type: Custom::StackSet
+    DependsOn:
+      - rIAMPoliciesNetworkAdmin
+    Properties:
+      ServiceToken: 
+        Fn::ImportValue: StackSetCustomResource
+      StackSetName: CloudPlatform-IAM-Roles-SAML-Baseline
+      StackSetDescription: 'IAM Roles: SAML Federated Access Roles'
+      TemplateURL: !Sub https://s3.amazonaws.com/${pBucket}/cfn-templates/CloudPlatform-IAM-Roles-SAML-Baseline.yml
+      Tags:
+        - Version: 4
+      Capabilities: 
+        - CAPABILITY_NAMED_IAM
+      AdministrationRoleARN: !Ref pStackSetAdministrationRoleARN
+      ExecutionRoleName: !Ref pStackSetExecutionRoleARN
+      OperationPreferences: {
+        "FailureToleranceCount": 0,
+        "MaxConcurrentCount": 10
+      }
+      StackInstances:
+        - Regions:
+            - us-east-1
+          Accounts:
+            - !Ref pMasterAccountId
+            - !Ref pLoggingAccountId
+            - !Ref pSecurityAccountId
+            - !Ref pSharedServicesAccountId
+            - !Ref pTransitAccountId
+            - !Ref pSandboxAccountId
+            - !Ref pNonProdAccountId
+            - !Ref pProdAccountId
+
+  rIAMPasswordPolicy:
+    Type: Custom::StackSet
+    Properties:
+      ServiceToken: 
+        Fn::ImportValue: StackSetCustomResource
+      StackSetName: CloudPlatform-IAM-PasswordPolicy
+      StackSetDescription: 'IAM Password Policy'
+      TemplateURL: !Sub https://s3.amazonaws.com/${pBucket}/cfn-templates/CloudPlatform-IAM-PasswordPolicy.yml
+      Tags:
+        - Version: 2
+      Capabilities: 
+        - CAPABILITY_NAMED_IAM
+      AdministrationRoleARN: !Ref pStackSetAdministrationRoleARN
+      ExecutionRoleName: !Ref pStackSetExecutionRoleARN
+      OperationPreferences: {
+        "FailureToleranceCount": 0,
+        "MaxConcurrentCount": 10
+      }
+      StackInstances:
+        - Regions:
+            - us-east-1
+          Accounts:
+            - !Ref pMasterAccountId
+            - !Ref pLoggingAccountId
+            - !Ref pSecurityAccountId
+            - !Ref pSharedServicesAccountId
+            - !Ref pTransitAccountId
+            - !Ref pSandboxAccountId
+            - !Ref pNonProdAccountId
+            - !Ref pProdAccountId
